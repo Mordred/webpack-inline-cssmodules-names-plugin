@@ -1,0 +1,38 @@
+{
+	"name": "webpack-inline-cssmodules-names-plugin",
+	"version": "0.0.1",
+	"description": "Webpack plugin to inline CSS modules names",
+	"keywords": [
+		"Webpack"
+	],
+	"homepage": "https://github.com/Mordred/webpack-inline-cssmodules-names-plugin",
+	"license": "GPL-2.0-or-later",
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Mordred/webpack-inline-cssmodules-names-plugin.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Mordred/webpack-inline-cssmodules-names-plugin/issues"
+	},
+	"scripts": {
+        "test": "jest"
+    },
+	"peerDependencies": {
+		"webpack": "^4.29.6"
+	},
+	"devDependencies": {
+		"css-loader": "3.2.0",
+		"jest": "24.9.0",
+		"webpack": "4.41.2"
+	},
+	"jest": {
+        "testMatch": [ "<rootDir>/**/__tests__/*.spec.js" ],
+        "testEnvironment": "node",
+        "watchPathIgnorePatterns": [
+            "<rootDir>/__tests__/build"
+        ]
+	}
+}
