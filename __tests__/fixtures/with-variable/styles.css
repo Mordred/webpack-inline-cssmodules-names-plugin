@@ -9,3 +9,7 @@
 .Example__button--variable {
     color: blue;
 }
+
+.Example__button--variable--base {
+    color: black;
+}

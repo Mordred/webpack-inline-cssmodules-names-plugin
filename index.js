@@ -74,27 +74,28 @@ class InlineCSSModuleNamesPlugin {
                                 range[1] += simple[0].length;
                             }
 
-                            const bracked = module._source
+                            const bracketed = module._source
                                 .source()
                                 .slice(dep.range[1])
-                                .match(/^\[(.+?)\]/);
-                            if (bracked) {
-                                const key = bracked[1];
-                                if (key[0] === "'" || key[0] === '"') {
+                                .match(/^\[([`"'])(.*)\1\]/);
+                            if (bracketed) {
+                                const key = bracketed[2];
+                                const stringStart = bracketed[1];
+                                if (stringStart === "'" || stringStart === '"') {
                                     // styles['Example'] or styles["Example"]
-                                    value = classNames[bracked[1].substr(1, bracked[1].length - 2)];
-                                    loc.end = loc.end.offset(bracked[0].length);
-                                    range[1] += bracked[0].length;
-                                } else if (key[0] === '`') {
+                                    value = classNames[key];
+                                    loc.end = loc.end.offset(bracketed[0].length);
+                                    range[1] += bracketed[0].length;
+                                } else if (stringStart === '`') {
                                     // styles[`Example`] - template string
                                     // This case is problematic, because it can contains variables - in that case we cannot inline classname
                                     if (/\${.+}/.test(key)) {
                                         // We have variable in the template string - ignore
                                         continue;
                                     } else {
-                                        value = classNames[bracked[1].substr(1, bracked[1].length - 2)];
-                                        loc.end = loc.end.offset(bracked[0].length);
-                                        range[1] += bracked[0].length;
+                                        value = classNames[key];
+                                        loc.end = loc.end.offset(bracketed[0].length);
+                                        range[1] += bracketed[0].length;
                                     }
                                 }
                             }
