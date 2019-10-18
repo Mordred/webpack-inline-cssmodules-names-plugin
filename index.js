@@ -1,6 +1,7 @@
 const HarmonyImportSideEffectDependency = require('webpack/lib/dependencies/HarmonyImportSideEffectDependency');
 const HarmonyImportSpecifierDependency = require('webpack/lib/dependencies/HarmonyImportSpecifierDependency');
 const ConstDependency = require('webpack/lib/dependencies/ConstDependency');
+const SourceLocation = require("acorn").SourceLocation; // TODO: Should be listed in peerDependency?
 
 function removeDependency(module, dep) {
     module.removeDependency(dep);
@@ -33,6 +34,7 @@ class InlineCSSModuleNamesPlugin {
 
                         const importSideEffectDependencies = new Map(); // Module -> Dependency
                         const usesConstantDependencies = new Map(); // Module -> Boolean
+                        const usesNonConstantDependencies = new Map(); // Module -> Boolean
                         const importSpecifierDependencies = []; // [ ImportSpecifierDependency ]
 
                         for (const dep of module.dependencies) {
@@ -55,14 +57,52 @@ class InlineCSSModuleNamesPlugin {
                             }
 
                             if (dep instanceof HarmonyImportSpecifierDependency) {
+                                const classNames = JSON.parse(dep.module._source.source().match(/{.*}/s)[0]);
+
+                                let canRemove = true;
+
+                                let value;
+                                // Clone
+                                let loc = new SourceLocation(module.parser, dep.loc.start, dep.loc.end);
+                                let range = dep.range;
+
+                                // styles.Example - dot object access
+                                const simple = module._source.source().slice(dep.range[1]).match(/^\.(\w+)/);
+                                if (simple) {
+                                    value = classNames[simple[1]];
+                                    loc.end = loc.end.offset(simple[0].length);
+                                    range[1] += simple[0].length;
+                                }
+
+                                const bracked = module._source.source().slice(dep.range[1]).match(/^\[(.+?)\]/);
+                                if (bracked) {
+                                    const key = bracked[1];
+                                    if (key[0] === "'" || key[0] === '"') {
+                                        // styles['Example'] or styles["Example"]
+                                        value = classNames[bracked[1].substr(1, bracked[1].length - 2)];
+                                        loc.end = loc.end.offset(bracked[0].length);
+                                        range[1] += bracked[0].length;
+                                    } else if (key[0] === '`') {
+                                        // styles[`Example`] - template string
+                                        // This case is problematic, because it can contains variables - in that case we cannot inline classname
+                                        if (/\${.+}/.test(key)) {
+                                            // We have variable in the template string - ignore
+                                            continue
+                                        } else {
+                                            value = classNames[bracked[1].substr(1, bracked[1].length - 2)];
+                                            loc.end = loc.end.offset(bracked[0].length);
+                                            range[1] += bracked[0].length;
+                                        }
+                                    }
+                                }
+
+                                const inlineDep = new ConstDependency(`/* inline-classname */ ${value ? '"' + value + '"' : value}`, dep.range);
+                                inlineDep.loc = loc;
+                                module.addDependency(inlineDep);
+
                                 // Mark the dependency for removal: we'll remove it after we're finished
                                 // traversing the dependency graph.
-                                importSpecifierDependencies.push( dep );
-
-                                const classNames = dep.module._source.source().replace('module.exports = ', '').replace(/;$/, '');
-                                const inlineDep = new ConstDependency('/* inline */ ' + classNames, dep.range);
-                                inlineDep.loc = dep.loc;
-                                module.addDependency(inlineDep);
+                                importSpecifierDependencies.push(dep);
 
                                 /* Remember the fact that we inlined some constant. We remove import statements
                                  * only for modules where we inlined at least something. The other modules we

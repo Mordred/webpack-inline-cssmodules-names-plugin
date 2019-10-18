@@ -16,10 +16,10 @@ describe('webpack-inline-cssmodules-names-plugin', () => {
 	});
 
 	afterAll(() => {
-		rimraf.sync( buildDirectory );
+		rimraf.sync(buildDirectory);
 	});
 
-	test('should produce expected output', done => {
+	test('should remove constant classname keys', done => {
 		const inputDirectory = path.join(fixturesDirectory, 'basic');
 		const outputDirectory = path.join(buildDirectory, 'basic');
 		const config = {
@@ -45,24 +45,72 @@ describe('webpack-inline-cssmodules-names-plugin', () => {
 				runtimeChunk: false,
 				moduleIds: 'named',
 				chunkIds: 'named',
-				minimize: true,
+				minimize: false,
 			},
 			output: {
 				path: outputDirectory,
 			},
 			plugins: [
-				new InlineCSSModulesNamesPlugin([ /\.css$/ ]),
+				new InlineCSSModulesNamesPlugin([/\.css$/]),
 			],
 		};
 
 		webpack(config, err => {
 			expect(err).toBeNull();
 
-			const outputFile = path.join( outputDirectory, 'main.js' );
-			const outputFileContent = fs.readFileSync( outputFile, 'utf8' );
-			expect( outputFileContent ).toMatchSnapshot( 'Output bundle should match snapshot' );
+			const outputFile = path.join(outputDirectory, 'main.js');
+			const outputFileContent = fs.readFileSync(outputFile, 'utf8');
+			expect(outputFileContent).toMatchSnapshot('Output bundle should match snapshot');
 
 			done();
 		});
 	});
+
+	test('should produce expected output', done => {
+		const inputDirectory = path.join(fixturesDirectory, 'with-variable');
+		const outputDirectory = path.join(buildDirectory, 'with-variable');
+		const config = {
+			context: inputDirectory,
+			entry: './index.js',
+			mode: 'production',
+			target: 'node',
+			module: {
+				rules: [
+					{
+						test: /\.css/,
+						use: [{
+							loader: 'css-loader',
+							options: {
+								modules: true,
+								onlyLocals: true,
+							},
+						}]
+					}
+				]
+			},
+			optimization: {
+				runtimeChunk: false,
+				moduleIds: 'named',
+				chunkIds: 'named',
+				minimize: false,
+			},
+			output: {
+				path: outputDirectory,
+			},
+			plugins: [
+				new InlineCSSModulesNamesPlugin([/\.css$/]),
+			],
+		};
+
+		webpack(config, err => {
+			expect(err).toBeNull();
+
+			const outputFile = path.join(outputDirectory, 'main.js');
+			const outputFileContent = fs.readFileSync(outputFile, 'utf8');
+			expect(outputFileContent).toMatchSnapshot('Output bundle should match snapshot');
+
+			done();
+		});
+	});
+
 });

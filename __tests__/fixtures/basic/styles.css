@@ -5,3 +5,15 @@
 .Example__button {
     color: green;
 }
+
+.Example__button--quoted {
+    color: blue;
+}
+
+.Example__button--doublequoted {
+    color: pink;
+}
+
+.Example__button--template {
+    color: violet;
+}

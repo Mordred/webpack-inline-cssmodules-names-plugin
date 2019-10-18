@@ -1,0 +1,11 @@
+.Example {
+    color: red;
+}
+
+.Example__button {
+    color: green;
+}
+
+.Example__button--variable {
+    color: blue;
+}
