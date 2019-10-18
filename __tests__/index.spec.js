@@ -16,7 +16,7 @@ describe('webpack-inline-cssmodules-names-plugin', () => {
     });
 
     afterAll(() => {
-        rimraf.sync(buildDirectory);
+        // rimraf.sync(buildDirectory);
     });
 
     test('should remove constant classname keys', (done) => {

@@ -31,7 +31,6 @@ class InlineCSSModuleNamesPlugin {
                 for (const module of modules) {
                     const importSideEffectDependencies = new Map(); // Module -> Dependency
                     const usesConstantDependencies = new Map(); // Module -> Boolean
-                    const usesNonConstantDependencies = new Map(); // Module -> Boolean
                     const importSpecifierDependencies = []; // [ ImportSpecifierDependency ]
 
                     for (const dep of module.dependencies) {
@@ -56,53 +55,78 @@ class InlineCSSModuleNamesPlugin {
                         if (dep instanceof HarmonyImportSpecifierDependency) {
                             const classNames = JSON.parse(dep.module._source.source().match(/{.*}/s)[0]);
 
-                            let canRemove = true;
-
                             let value;
+                            let range = [...dep.range];
                             // Clone
                             let loc = new SourceLocation(module.parser, dep.loc.start, dep.loc.end);
-                            let range = dep.range;
 
-                            // styles.Example - dot object access
-                            const simple = module._source
-                                .source()
-                                .slice(dep.range[1])
-                                .match(/^\.(\w+)/);
-                            if (simple) {
-                                value = classNames[simple[1]];
-                                loc.end = loc.end.offset(simple[0].length);
-                                range[1] += simple[0].length;
-                            }
-
-                            const bracketed = module._source
-                                .source()
-                                .slice(dep.range[1])
-                                .match(/^\[([`"'])(.*)\1\]/);
-                            if (bracketed) {
-                                const key = bracketed[2];
-                                const stringStart = bracketed[1];
-                                if (stringStart === "'" || stringStart === '"') {
-                                    // styles['Example'] or styles["Example"]
-                                    value = classNames[key];
-                                    loc.end = loc.end.offset(bracketed[0].length);
-                                    range[1] += bracketed[0].length;
-                                } else if (stringStart === '`') {
-                                    // styles[`Example`] - template string
-                                    // This case is problematic, because it can contains variables - in that case we cannot inline classname
-                                    if (/\${.+}/.test(key)) {
-                                        // We have variable in the template string - ignore
-                                        continue;
-                                    } else {
-                                        value = classNames[key];
-                                        loc.end = loc.end.offset(bracketed[0].length);
-                                        range[1] += bracketed[0].length;
-                                    }
+                            const source = module._source.source();
+                            const nextChar = source[dep.range[1]];
+                            if (nextChar === '.') {
+                                // styles.Example - dot object access
+                                let identifier = '';
+                                let index = dep.range[1] + 1;
+                                while (/[\w_]/.test(source[index])) {
+                                    identifier += source[index];
+                                    index++;
                                 }
+                                value = classNames[identifier];
+                                loc.end = loc.end.offset(identifier.length + 1);
+                                range[1] += identifier.length + 1;
+                            } else if (nextChar === '[') {
+                                let stringStart = null;
+                                let depth = 0;
+                                let identifier = '';
+                                let index = dep.range[1] + 1;
+                                let hasVariable = false;
+                                while (true) {
+                                    const char = source[index];
+                                    if (char === ']' && depth === 0) {
+                                        break;
+                                    }
+                                    if ((char === '`' || char === '"' || char === "'") && depth === 0) {
+                                        stringStart = stringStart ? null : char;
+                                    }
+                                    if (
+                                        stringStart &&
+                                        char === '$' &&
+                                        source[index - 1] !== '\\' &&
+                                        source[index + 1] === '{'
+                                    ) {
+                                        depth++;
+                                        hasVariable = true;
+                                    }
+                                    if (stringStart && char === '}' && source[index - 1] !== '\\') {
+                                        depth--;
+                                    }
+                                    if (char === '+' && !stringStart) {
+                                        // String concatenation
+                                        hasVariable = true;
+                                    }
+                                    identifier += source[index];
+                                    index++;
+                                }
+
+                                // Template literal with variable - we cannot inline className
+                                if (hasVariable) {
+                                    continue;
+                                }
+
+                                identifier = identifier.trim();
+
+                                // Identifier is not a string
+                                if (identifier[0] !== '`' && identifier[0] !== '"' && identifier[0] !== "'") {
+                                    continue;
+                                }
+
+                                value = classNames[identifier.substr(1, identifier.length - 2)];
+                                loc.end = loc.end.offset(identifier.length + 2);
+                                range[1] += identifier.length + 2;
                             }
 
                             const inlineDep = new ConstDependency(
                                 `/* inline-classname */ ${value ? '"' + value + '"' : value}`,
-                                dep.range,
+                                range,
                             );
                             inlineDep.loc = loc;
                             module.addDependency(inlineDep);

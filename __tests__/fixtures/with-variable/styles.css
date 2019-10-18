@@ -13,3 +13,11 @@
 .Example__button--variable--base {
     color: black;
 }
+
+.Exmaple__button--pink {
+    color: pink;
+}
+
+.Exmaple__button--violet {
+    color: violet;
+}

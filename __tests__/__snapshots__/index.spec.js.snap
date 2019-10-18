@@ -115,7 +115,15 @@ const index = 12;
 const storage = { [index]: 'variable' };
 console.log(styles_default.a[\`Example__button--\${mode}\`]);
 console.log(styles_default.a[\`Example__button--\${storage[index]}--base\`]);
-console.log(util());
+console.log(styles_default.a['Example__button--' + mode]);
+const color = 1;
+cx(
+    /* inline-classname */ \\"_1pnf1zespOZ6Wh_39JYiwU\\",
+    styles_default.a[[
+        'Example__button--pink',
+        'Example__button--violet',
+    ][color]],
+)
 
 
 /***/ }),
@@ -128,7 +136,9 @@ module.exports = {
 	\\"Example\\": \\"_1pnf1zespOZ6Wh_39JYiwU\\",
 	\\"Example__button\\": \\"IOSoqXoyZpErJ5EF7paGS\\",
 	\\"Example__button--variable\\": \\"_2yOeyO_4TJVeZD75xvzd65\\",
-	\\"Example__button--variable--base\\": \\"_23LSStG4GSxijLAbQHqpE8\\"
+	\\"Example__button--variable--base\\": \\"_23LSStG4GSxijLAbQHqpE8\\",
+	\\"Exmaple__button--pink\\": \\"_1tFdfs9gwvGWM89QitEs-i\\",
+	\\"Exmaple__button--violet\\": \\"_2dXwkC3m8TQ0UJnGGkHiQl\\"
 };
 
 /***/ })
@@ -246,6 +256,15 @@ console.log(/* inline-classname */ \\"_1qQUo422N-U7RCEqM4aqto\\");
 console.log(/* inline-classname */ \\"_3b010Cfq7ukTkIzod4hPKN\\");
 console.log(/* inline-classname */ \\"UtJJNh9g54kBLKG0qWQaI\\");
 console.log(util());
+
+function cx(...args) {
+    console.log(...args);
+}
+
+const hasLargeFont = true;
+const isCompact = true;
+
+cx(/* inline-classname */ \\"_1pnf1zespOZ6Wh_39JYiwU\\", hasLargeFont && /* inline-classname */ \\"_1qQUo422N-U7RCEqM4aqto\\", isCompact && /* inline-classname */ \\"_3b010Cfq7ukTkIzod4hPKN\\")
 
 
 /***/ })
