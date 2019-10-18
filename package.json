@@ -6,7 +6,7 @@
     "Webpack"
   ],
   "homepage": "https://github.com/Mordred/webpack-inline-cssmodules-names-plugin",
-  "license": "GPL-2.0-or-later",
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
