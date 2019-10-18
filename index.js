@@ -8,7 +8,7 @@ function removeDependency(module, dep) {
     dep.module.reasons = dep.module.reasons.filter((r) => r.dependency !== dep);
 }
 
-class InlineCSSModuleNamesPlugin {
+class InlineCSSModulesNamesPlugin {
     /*
      * `matchers` is a regular expression or an array of regular expressions that are used
      * to match module paths. Only constants from matching modules will be inlined.
@@ -26,8 +26,8 @@ class InlineCSSModuleNamesPlugin {
     }
 
     apply(compiler) {
-        compiler.hooks.thisCompilation.tap('InlineCSSModuleNamesPlugin', (compilation, { normalModuleFactory }) => {
-            compilation.hooks.optimizeDependencies.tap('InlineCSSModuleNamesPlugin', (modules) => {
+        compiler.hooks.thisCompilation.tap('InlineCSSModulesNamesPlugin', (compilation, { normalModuleFactory }) => {
+            compilation.hooks.optimizeDependencies.tap('InlineCSSModulesNamesPlugin', (modules) => {
                 for (const module of modules) {
                     const importSideEffectDependencies = new Map(); // Module -> Dependency
                     const usesConstantDependencies = new Map(); // Module -> Boolean
@@ -159,4 +159,4 @@ class InlineCSSModuleNamesPlugin {
     }
 }
 
-module.exports = InlineCSSModuleNamesPlugin;
+module.exports = InlineCSSModulesNamesPlugin;
